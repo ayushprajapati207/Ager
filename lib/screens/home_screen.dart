@@ -51,6 +51,64 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // A popup box to edit the habit's name
+  void _showEditHabitDialog(String habitId, String currentTitle) {
+    final textController = TextEditingController(text: currentTitle);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Habit Name'),
+        content: TextField(
+          controller: textController,
+          decoration: const InputDecoration(hintText: 'Rename your habit'),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (textController.text.isNotEmpty) {
+                _habitManager.editHabit(habitId, textController.text);
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // A safety confirmation prompt before deleting data permanently
+  void _showDeleteConfirmationDialog(String habitId, String habitTitle) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Habit?'),
+        content: Text(
+          'Are you sure you want to permanently remove "$habitTitle"? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              _habitManager.deleteHabit(habitId);
+              Navigator.pop(context);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final today = DateTime.now();
@@ -132,14 +190,67 @@ class _HomeScreenState extends State<HomeScreen> {
                                     : null,
                               ),
                             ),
-                            trailing: Checkbox(
-                              value: isCompletedToday,
-                              onChanged: (value) {
-                                _habitManager.toggleHabitCompletion(
-                                  habit.id,
-                                  today,
-                                );
-                              },
+                            // We wrap the actions in a Row so they layout beautifully side by side
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // The standard tracking Checkbox
+                                Checkbox(
+                                  value: isCompletedToday,
+                                  onChanged: (value) {
+                                    _habitManager.toggleHabitCompletion(
+                                      habit.id,
+                                      today,
+                                    );
+                                  },
+                                ),
+
+                                // The new Management Options Menu (Three Vertical Dots)
+                                PopupMenuButton<String>(
+                                  onSelected: (action) {
+                                    if (action == 'edit') {
+                                      _showEditHabitDialog(
+                                        habit.id,
+                                        habit.title,
+                                      );
+                                    } else if (action == 'delete') {
+                                      _showDeleteConfirmationDialog(
+                                        habit.id,
+                                        habit.title,
+                                      );
+                                    }
+                                  },
+                                  itemBuilder: (BuildContext context) => [
+                                    const PopupMenuItem(
+                                      value: 'edit',
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.edit, size: 20),
+                                          SizedBox(width: 8),
+                                          Text('Edit'),
+                                        ],
+                                      ),
+                                    ),
+                                    const PopupMenuItem(
+                                      value: 'delete',
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.delete,
+                                            color: Colors.red,
+                                            size: 20,
+                                          ),
+                                          SizedBox(width: 8),
+                                          Text(
+                                            'Delete',
+                                            style: TextStyle(color: Colors.red),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           );
                         },

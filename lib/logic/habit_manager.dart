@@ -72,4 +72,26 @@ class HabitManager extends ChangeNotifier {
     }
     return dataset;
   }
+
+  // 5. UPDATE: Change the title of an existing habit
+  Future<void> editHabit(String habitId, String newTitle) async {
+    final habitIndex = _habits.indexWhere((h) => h.id == habitId);
+    if (habitIndex != -1) {
+      // Re-create the habit object with the updated title but keep the historical dates intact
+      _habits[habitIndex] = Habit(
+        id: _habits[habitIndex].id,
+        title: newTitle,
+        completedDays: _habits[habitIndex].completedDays,
+      );
+      await _database.saveHabits(_habits);
+      notifyListeners();
+    }
+  }
+
+  // 6. DELETE: Remove a habit entirely from the tracking system
+  Future<void> deleteHabit(String habitId) async {
+    _habits.removeWhere((habit) => habit.id == habitId);
+    await _database.saveHabits(_habits);
+    notifyListeners();
+  }
 }
