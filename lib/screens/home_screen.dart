@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../logic/habit_manager.dart';
+import 'package:flutter_heatmap_calendar/flutter_heatmap_calendar.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -64,37 +65,87 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context, child) {
           final habits = _habitManager.habits;
 
-          if (habits.isEmpty) {
-            return const Center(
-              child: Text('No habits yet. Tap + to add one!'),
-            );
-          }
+          return Column(
+            children: [
+              // 1. The GitHub-style Heatmap Grid Section
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Card(
+                  elevation: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: HeatMap(
+                      // 1. Force it to show exactly the last 365 days
+                      startDate: today.subtract(const Duration(days: 365)),
+                      endDate: today,
 
-          return ListView.builder(
-            itemCount: habits.length,
-            itemBuilder: (context, index) {
-              final habit = habits[index];
-              final isCompletedToday = habit.completedDays.contains(
-                todayString,
-              );
+                      // 2. Shrink the boxes down to look like GitHub (12-15 is the sweet spot)
+                      size: 13,
 
-              return ListTile(
-                title: Text(
-                  habit.title,
-                  style: TextStyle(
-                    decoration: isCompletedToday
-                        ? TextDecoration.lineThrough
-                        : null,
+                      // 3. Make the gaps between the boxes tighter
+                      margin: const EdgeInsets.all(2),
+
+                      // The rest remains exactly the same!
+                      datasets: _habitManager.getHeatMapData(),
+                      colorMode: ColorMode.color,
+                      defaultColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                      textColor: Theme.of(context).colorScheme.onSurface,
+                      showColorTip: false,
+                      showText: false,
+                      scrollable: true,
+                      colorsets: {
+                        1: Theme.of(context).colorScheme.primary.withAlpha(50),
+                        2: Theme.of(context).colorScheme.primary.withAlpha(100),
+                        3: Theme.of(context).colorScheme.primary.withAlpha(180),
+                        4: Theme.of(context).colorScheme.primary,
+                      },
+                    ),
                   ),
                 ),
-                trailing: Checkbox(
-                  value: isCompletedToday,
-                  onChanged: (value) {
-                    _habitManager.toggleHabitCompletion(habit.id, today);
-                  },
-                ),
-              );
-            },
+              ),
+
+              // Divider between the Grid and the Habits list
+              const Divider(),
+
+              // 2. The Habit Checklist Section
+              Expanded(
+                child: habits.isEmpty
+                    ? const Center(
+                        child: Text('No habits yet. Tap + to add one!'),
+                      )
+                    : ListView.builder(
+                        itemCount: habits.length,
+                        itemBuilder: (context, index) {
+                          final habit = habits[index];
+                          final isCompletedToday = habit.completedDays.contains(
+                            todayString,
+                          );
+
+                          return ListTile(
+                            title: Text(
+                              habit.title,
+                              style: TextStyle(
+                                decoration: isCompletedToday
+                                    ? TextDecoration.lineThrough
+                                    : null,
+                              ),
+                            ),
+                            trailing: Checkbox(
+                              value: isCompletedToday,
+                              onChanged: (value) {
+                                _habitManager.toggleHabitCompletion(
+                                  habit.id,
+                                  today,
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
           );
         },
       ),

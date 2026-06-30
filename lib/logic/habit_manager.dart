@@ -50,4 +50,26 @@ class HabitManager extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Map<DateTime, int> getHeatMapData() {
+    Map<DateTime, int> dataset = {};
+
+    for (var habit in _habits) {
+      for (var dateString in habit.completedDays) {
+        // Parse the YYYY-MM-DD string back into a DateTime object
+        DateTime date = DateTime.parse(dateString);
+
+        // Normalize the date to midnight to ensure exact matching
+        DateTime normalizedDate = DateTime(date.year, date.month, date.day);
+
+        // If the date already has a habit, increase its intensity. Otherwise, start at 1.
+        if (dataset.containsKey(normalizedDate)) {
+          dataset[normalizedDate] = dataset[normalizedDate]! + 1;
+        } else {
+          dataset[normalizedDate] = 1;
+        }
+      }
+    }
+    return dataset;
+  }
 }
