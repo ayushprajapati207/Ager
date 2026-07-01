@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../logic/habit_manager.dart';
 import 'package:flutter_heatmap_calendar/flutter_heatmap_calendar.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -116,7 +117,20 @@ class _HomeScreenState extends State<HomeScreen> {
         "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Ager Habits')),
+      appBar: AppBar(
+        title: const Text('Ager Habits'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
+          ),
+        ],
+      ),
       // ListenableBuilder automatically repaints the screen when the Brain says notifyListeners()
       body: ListenableBuilder(
         listenable: _habitManager,
